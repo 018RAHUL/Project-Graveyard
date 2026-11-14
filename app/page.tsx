@@ -1,5 +1,5 @@
-import GityardApp from "@/components/gityard-app"
+import GityardLanding from "@/components/gityard-landing"
 
 export default function Page() {
-  return <GityardApp />
+  return <GityardLanding />
 }
