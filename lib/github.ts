@@ -45,6 +45,8 @@ export type GitHubRepo = {
   owner: string
   description: string | null
   language: string | null
+  /** Technologies detected from languages + package.json (live backend only). */
+  technologies?: string[]
   visibility: "public" | "private"
   /** ISO timestamp */
   updatedAt: string
@@ -113,16 +115,30 @@ export function createHttpGitHubClient(): GitHubClient {
   return {
     mode: "live",
     getConnection: () => fetch(`${base()}/connection`).then(unwrap),
-    connect: () => fetch(`${base()}/connect`, { method: "POST" }).then(unwrap),
+    async connect() {
+      const out = (await fetch(`${base()}/connect`, { method: "POST" }).then(unwrap)) as {
+        installUrl?: string
+        account?: GitHubAccount
+      }
+      // Live flow: the browser is redirected to github.com to (re)install the
+      // App. When GitHub redirects back, the session is restored via
+      // getConnection() on the next mount.
+      if (out.installUrl) {
+        window.location.assign(out.installUrl)
+        return new Promise<GitHubAccount>(() => {}) // resolves never — page navigates
+      }
+      if (out.account) return out.account
+      throw new Error("Could not start the GitHub connection")
+    },
     listRepos: () => fetch(`${base()}/repositories`).then(unwrap),
     async importRepos(repoIds, onProgress) {
-      const out = await fetch(`${base()}/import`, {
+      const out = (await fetch(`${base()}/import`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ repoIds }),
-      }).then(unwrap)
+      }).then(unwrap)) as { statuses?: RepoImportStatus[]; succeeded?: GitHubRepo[]; failed?: ImportOutcome["failed"] }
       onProgress(out.statuses ?? [])
-      return out
+      return { succeeded: out.succeeded ?? [], failed: out.failed ?? [] }
     },
     disconnect: () => fetch(`${base()}/connection`, { method: "DELETE" }).then(() => undefined),
   }

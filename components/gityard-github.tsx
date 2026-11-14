@@ -439,6 +439,22 @@ export default function GitHubFlow({ account, importedIds, onConnected, onDiscon
   const [outcome, setOutcome] = useState<ImportOutcome | null>(null)
   const demo = client.mode === "demo"
 
+  // Restore an existing session (e.g. after returning from the GitHub App
+  // installation redirect). No-op in demo mode when not connected.
+  useEffect(() => {
+    let alive = true
+    client
+      .getConnection()
+      .then((c) => {
+        if (alive && c.status === "connected" && c.account) onConnected(c.account)
+      })
+      .catch(() => {})
+    return () => {
+      alive = false
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const connect = () => {
     setConnecting(true)
     client
