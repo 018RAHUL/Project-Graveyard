@@ -1,15 +1,15 @@
 {
-  "name": "backend",
+  "name": "project-graveyard-backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend API for Project Graveyard",
+  "main": "src/server.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
+    "@supabase/supabase-js": "^2.119.0",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "mongoose": "^9.12.1",
